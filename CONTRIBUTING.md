@@ -7,7 +7,7 @@
 3. add its filename to `window.TrackExtraPlugins` in `plugins/manifest.js`.
 4. test the full lifecycle locally: add it, edit it, resize it, remove it, reload the
    page, confirm your data survived. try it in dark mode and at phone width too.
-5. run `npm run check` (needs node 20+, no `npm install` required). it catches
+5. run `npm run check` (needs node 22+, no `npm install` required). it catches
    syntax errors, a missing manifest entry, contract mistakes, and hardcoded colors.
 6. open a pull request containing just those two file changes (your new plugin file,
    plus the one added line in the manifest).

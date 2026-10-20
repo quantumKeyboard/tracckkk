@@ -35,7 +35,7 @@ its `CACHE` name so installed copies pick up the change.
 
 ## prerequisites for native builds
 
-- **node 20+** and `npm install` (installs `@tauri-apps/cli`)
+- **node 22+** and `npm install` (installs `@tauri-apps/cli`)
 - **rust** (stable) via [rustup](https://rustup.rs)
 - **windows**: microsoft c++ build tools ("desktop development with c++") and
   webview2 (already on windows 10/11)

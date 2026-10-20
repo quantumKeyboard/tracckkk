@@ -95,7 +95,7 @@ the full file-by-file map, data model and boot sequence are in
 # just the web app: no install needed
 open index.html                  # or double-click it
 
-# with node 20+
+# with node 22+
 npm install                      # only needed for the native app builds
 npm run serve                    # http://localhost:5173, with the service worker
 npm run check                    # syntax + plugin contract checks (what ci runs)
