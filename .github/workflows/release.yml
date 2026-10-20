@@ -1,0 +1,96 @@
+# builds the windows installers and the android apk when you push a v* tag,
+# and attaches them to a draft github release for you to review and publish.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tagName: ${{ github.ref_name }}
+          releaseName: '~track ${{ github.ref_name }}'
+          releaseBody: 'see CHANGELOG.md for what changed. windows: download the -setup.exe. android: download the .apk.'
+          releaseDraft: true
+          prerelease: false
+
+  android:
+    # waits for the windows job so there's exactly one draft release to upload into
+    needs: windows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+
+      - name: set up signing (skipped if the secrets aren't configured)
+        env:
+          ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          if [ -z "$ANDROID_KEY_BASE64" ]; then
+            echo "::warning::no ANDROID_KEY_BASE64 secret -- the release apk will be unsigned and won't install. see docs/BUILDING.md"
+            exit 0
+          fi
+          echo "$ANDROID_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          cat > src-tauri/gen/android/keystore.properties <<PROPS
+          keyAlias=$ANDROID_KEY_ALIAS
+          password=$ANDROID_KEY_PASSWORD
+          storeFile=$RUNNER_TEMP/release.jks
+          PROPS
+
+      - name: build apk
+        env:
+          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
+        run: npx tauri android build --apk
+
+      - name: rename apk
+        run: |
+          apk=$(find src-tauri/gen/android/app/build/outputs/apk -name '*.apk' | head -1)
+          cp "$apk" "track_${GITHUB_REF_NAME#v}_android.apk"
+
+      - name: attach apk to the draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" track_*_android.apk --clobber
+
+      - name: keep the apk as a build artifact too
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: track_*_android.apk

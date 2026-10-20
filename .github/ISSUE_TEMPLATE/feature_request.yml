@@ -1,0 +1,21 @@
+name: idea or feature
+description: suggest a plugin or a change
+labels: [idea]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: what problem would it solve?
+      description: the "why" is more useful than the "how". there's often more than one way to fix a problem.
+    validations:
+      required: true
+  - type: dropdown
+    id: kind
+    attributes:
+      label: plugin or core?
+      description: if you're not sure, it's probably a plugin.
+      options:
+        - a new plugin
+        - a change to an existing plugin
+        - a change to the core app
+        - not sure

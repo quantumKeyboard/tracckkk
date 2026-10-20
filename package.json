@@ -1,0 +1,23 @@
+{
+  "name": "track",
+  "version": "1.0.0",
+  "description": "a minimal, local-first dashboard: habits, board, notes, calendar and plugins on a movable canvas.",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "serve": "node scripts/serve.mjs",
+    "build:web": "node scripts/build-web.mjs",
+    "check": "node scripts/check.mjs",
+    "tauri": "tauri",
+    "desktop:dev": "tauri dev",
+    "desktop:build": "tauri build",
+    "android:init": "tauri android init",
+    "android:dev": "tauri android dev",
+    "android:build": "tauri android build --apk",
+    "icons": "tauri icon assets/icon.svg && tauri icon assets/icon.svg -p 192,512 -o assets/icons"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2.12.3"
+  }
+}

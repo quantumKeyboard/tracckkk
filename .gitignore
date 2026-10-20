@@ -1,0 +1,35 @@
+# dependencies
+node_modules/
+
+# build output
+dist/
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# android: generated build output and machine-specific files
+# (src-tauri/gen/android itself is committed so the project builds as-is)
+src-tauri/gen/android/**/build/
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/keystore.properties
+src-tauri/gen/android/app/src/main/jniLibs/
+src-tauri/gen/android/app/src/main/assets/
+*.jks
+*.keystore
+
+# your own data -- never commit a connected storage file or a backup
+track-data.json
+track-backup.json
+
+# personal / local files
+plugins/assets/
+*.lnk
+
+# os + editors
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log

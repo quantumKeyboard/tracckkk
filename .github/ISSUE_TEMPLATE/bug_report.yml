@@ -1,0 +1,32 @@
+name: bug report
+description: something isn't working the way it should
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: what happened
+      description: what you did, what you expected, and what happened instead.
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: where
+      options:
+        - browser (opened index.html from disk)
+        - browser / pwa (served over http)
+        - windows app
+        - android app
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: browser or app version
+      placeholder: e.g. chrome 140, ~track 1.0.0
+  - type: textarea
+    id: console
+    attributes:
+      label: console output or screenshot
+      description: anything from the browser console (f12), or a screenshot, helps a lot.
