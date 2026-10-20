@@ -115,7 +115,11 @@ storeFile=C:\\absolute\\path\\to\\track-release.jks
 `npm run android:build` will now produce a signed
 `app-universal-release.apk`.
 
-for ci, add these repository secrets and the release workflow signs automatically:
+for ci, add these repository secrets and the release workflow signs with your key
+automatically. **without them** it signs each build with a throwaway key: the apk
+installs fine, but a later apk signed with a different key can't update it in place,
+so people have to export a backup, uninstall, reinstall and import. set the secrets
+before you have users you'd rather not put through that.
 
 | secret | value |
 |---|---|

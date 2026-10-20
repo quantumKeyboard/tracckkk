@@ -30,7 +30,15 @@ jobs:
         with:
           tagName: ${{ github.ref_name }}
           releaseName: '~track ${{ github.ref_name }}'
-          releaseBody: 'see CHANGELOG.md for what changed. windows: download the -setup.exe. android: download the .apk.'
+          releaseBody: |
+            see [CHANGELOG.md](https://github.com/quantumKeyboard/tracckkk/blob/main/CHANGELOG.md) for what changed.
+
+            **windows**: download `track_*_x64-setup.exe` (or the `.msi`). smartscreen may warn because the installer isn't code-signed: *more info -> run anyway*.
+
+            **android**: download `track_*_android.apk`, open it, and allow installing from that app when asked.
+            if a newer version won't install over an older one, export a backup (settings -> export -> everything), uninstall, install the new apk, and import the backup.
+
+            **web**: https://quantumkeyboard.github.io/tracckkk/ (install it as an app from the browser menu)
           releaseDraft: true
           prerelease: false
 
@@ -56,17 +64,27 @@ jobs:
           workspaces: src-tauri
       - run: npm ci
 
-      - name: set up signing (skipped if the secrets aren't configured)
+      # with the ANDROID_KEY_* secrets set, the apk is signed with your permanent key.
+      # without them, a throwaway key is made for this one build: the apk installs,
+      # but a later build signed with a different key can't update it in place
+      # (people would export a backup, uninstall, reinstall). see docs/BUILDING.md
+      - name: set up signing
         env:
           ANDROID_KEY_BASE64: ${{ secrets.ANDROID_KEY_BASE64 }}
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          if [ -z "$ANDROID_KEY_BASE64" ]; then
-            echo "::warning::no ANDROID_KEY_BASE64 secret -- the release apk will be unsigned and won't install. see docs/BUILDING.md"
-            exit 0
+          if [ -n "$ANDROID_KEY_BASE64" ]; then
+            echo "$ANDROID_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          else
+            echo "::warning::no ANDROID_KEY_* secrets -- signing with a throwaway key. future builds won't install over this one. see docs/BUILDING.md"
+            ANDROID_KEY_ALIAS=track
+            ANDROID_KEY_PASSWORD=$(openssl rand -hex 24)
+            keytool -genkeypair -keystore "$RUNNER_TEMP/release.jks" -storetype PKCS12 -keyalg RSA -keysize 2048 \
+              -validity 10000 -alias "$ANDROID_KEY_ALIAS" -storepass "$ANDROID_KEY_PASSWORD" -keypass "$ANDROID_KEY_PASSWORD" \
+              -dname "CN=~track temporary build key"
           fi
-          echo "$ANDROID_KEY_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "::add-mask::$ANDROID_KEY_PASSWORD"
           cat > src-tauri/gen/android/keystore.properties <<PROPS
           keyAlias=$ANDROID_KEY_ALIAS
           password=$ANDROID_KEY_PASSWORD
