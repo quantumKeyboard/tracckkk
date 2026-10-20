@@ -91,9 +91,14 @@ jobs:
           storeFile=$RUNNER_TEMP/release.jks
           PROPS
 
+      # the runner image ships an sdk; install a pinned ndk into it rather than
+      # relying on whichever version the image happens to have
+      - name: install android ndk
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --install "ndk;28.2.13676358" > /dev/null
+          echo "NDK_HOME=$ANDROID_HOME/ndk/28.2.13676358" >> "$GITHUB_ENV"
+
       - name: build apk
-        env:
-          NDK_HOME: ${{ env.ANDROID_NDK_LATEST_HOME }}
         run: npx tauri android build --apk
 
       - name: rename apk
