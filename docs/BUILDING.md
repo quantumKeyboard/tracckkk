@@ -1,17 +1,18 @@
 # building ~track
 
 the app itself needs no build: `index.html` runs straight from disk. this guide is
-for the three ways of *packaging* it.
+for the four ways of *packaging* it.
 
 | target | tool | output |
 |---|---|---|
 | web / pwa | `scripts/build-web.mjs` + `sw.js` | `dist/`, deployable to any static host |
 | windows | [tauri 2](https://v2.tauri.app) | `.exe` (nsis) and `.msi` installers |
+| macos | tauri 2 | universal `.dmg` (apple silicon + intel) |
 | android | tauri 2 | `.apk` (and `.aab` for the play store) |
 
-all three ship the same files. `npm run build:web` copies them into `dist/`, and
+all four ship the same files. `npm run build:web` copies them into `dist/`, and
 tauri wraps `dist/` in a native window using the system webview (webview2 on
-windows, android system webview), so installers stay small (a few mb, not ~150 mb).
+windows, wkwebview on macos, android system webview), so installers stay small (a few mb, not ~150 mb).
 
 ---
 
@@ -37,6 +38,9 @@ its `CACHE` name so installed copies pick up the change.
 
 - **node 22+** and `npm install` (installs `@tauri-apps/cli`)
 - **rust** (stable) via [rustup](https://rustup.rs)
+- **macos**: xcode command line tools (`xcode-select --install`), plus both rust
+  targets for a universal build:
+  `rustup target add aarch64-apple-darwin x86_64-apple-darwin`
 - **windows**: microsoft c++ build tools ("desktop development with c++") and
   webview2 (already on windows 10/11)
 - **android**, additionally:
@@ -76,6 +80,37 @@ the first build downloads the nsis and wix toolsets automatically.
 ("windows protected your pc" -> more info -> run anyway) until the app has a
 reputation or is signed. see
 [tauri's windows signing guide](https://v2.tauri.app/distribute/sign/windows/).
+
+---
+
+## macos
+
+a `.dmg` can only be built on a mac. without one, push a tag and let the release
+workflow build it on github's macos runner (see [releasing](#releasing)).
+
+```sh
+npm run desktop:dev      # run the app with the current files
+npx tauri build --target universal-apple-darwin --bundles dmg   --config '{"bundle":{"macOS":{"signingIdentity":"-"}}}'
+```
+
+the dmg lands in
+`src-tauri/target/universal-apple-darwin/release/bundle/dmg/track_<version>_universal.dmg`.
+open it and drag **track** into **Applications**.
+
+**signing**: the build is *ad-hoc* signed (`signingIdentity: "-"`). apple silicon
+won't launch a completely unsigned app, and ad-hoc signing is enough to get past that.
+it isn't notarized, though, so gatekeeper blocks the first launch of a downloaded copy:
+
+- macos 15+: try to open it once, then *system settings -> privacy & security* ->
+  scroll down -> **open anyway**.
+- macos 14 and older: right-click the app in applications -> **open** -> **open**.
+- if macos says the app **"is damaged and can't be opened"**, that's the quarantine
+  flag on an un-notarized download. clear it with
+  `xattr -cr /Applications/track.app` and open it again.
+
+to get rid of these prompts you need an apple developer account ($99/year) to sign
+with a developer id and notarize. see
+[tauri's macos signing guide](https://v2.tauri.app/distribute/sign/macos/).
 
 ---
 
@@ -150,8 +185,8 @@ allow "install unknown apps" for the app you opened it from when android asks.
    git tag v1.0.0
    git push origin main --tags
    ```
-3. `.github/workflows/release.yml` builds the windows installers and the android apk
-   and attaches them to a **draft** release. review it on github, then publish.
+3. `.github/workflows/release.yml` builds the windows installers, the macos dmg and the
+   android apk and attaches them to a **draft** release. review it on github, then publish.
 
 ---
 

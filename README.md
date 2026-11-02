@@ -9,7 +9,7 @@ a progress-insights panel and a growing set of plugins, all as movable, resizabl
 panels on a plain checkered-paper canvas. everything is lowercase, on purpose.
 
 no account, no server, no build step. open `index.html` and it works.
-or install it on windows and android.
+or install it on windows, macos and android.
 
 [features](#features) · [install](#install) · [plugins](#plugins) · [building](docs/BUILDING.md) · [project map](PROJECT_MAP.md) · [contributing](CONTRIBUTING.md)
 
@@ -37,6 +37,7 @@ or install it on windows and android.
 |---|---|
 | **any browser** | clone or download the repo, open `index.html`. that's it. |
 | **windows** | download the `.exe` (or `.msi`) installer from [releases](../../releases). |
+| **macos** | download the `.dmg` from [releases](../../releases), open it and drag **track** into **Applications**. the first launch is blocked because the app isn't notarized: *system settings -> privacy & security -> open anyway*. |
 | **android** | download the `.apk` from [releases](../../releases) and open it (allow "install unknown apps" for your browser/file manager when asked). |
 | **as a web app (pwa)** | open the hosted version (or `npm run serve` locally) in chrome/edge, then *install app* from the address bar or menu. works on desktop and android. |
 

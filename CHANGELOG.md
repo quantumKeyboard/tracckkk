@@ -6,6 +6,12 @@ all notable changes to this project are written down here. the format follows
 
 ## [unreleased]
 
+## [1.0.1] - 2026-11-03
+
+### added
+- **macos app**: a universal `.dmg` (apple silicon + intel, macos 10.15+), built by
+  the release workflow and attached to the release next to the windows and android builds.
+
 ## [1.0.0] - 2026-10-20
 
 first public release.
@@ -34,5 +40,6 @@ first public release.
 - puzzle: tile colors come from the theme's chart colors instead of hardcoded hex
   values, so they follow themes and dark mode.
 
-[unreleased]: https://github.com/quantumKeyboard/tracckkk/compare/v1.0.0...HEAD
+[unreleased]: https://github.com/quantumKeyboard/tracckkk/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/quantumKeyboard/tracckkk/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/quantumKeyboard/tracckkk/releases/tag/v1.0.0

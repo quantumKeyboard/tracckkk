@@ -1,4 +1,4 @@
-# builds the windows installers and the android apk when you push a v* tag,
+# builds the windows installers, the macos dmg and the android apk when you push a v* tag,
 # and attaches them to a draft github release for you to review and publish.
 name: release
 
@@ -35,12 +35,59 @@ jobs:
 
             **windows**: download `track_*_x64-setup.exe` (or the `.msi`). smartscreen may warn because the installer isn't code-signed: *more info -> run anyway*.
 
+            **macos** (apple silicon and intel, 10.15+): download `track_*_macos_universal.dmg`, open it and drag **track** into **Applications**. the app isn't notarized, so the first launch is blocked: open *system settings -> privacy & security*, scroll down and click *open anyway* (on macos 14 and older you can instead right-click the app -> *open*). if macos says the app "is damaged", run `xattr -cr /Applications/track.app` in terminal and open it again.
+
             **android**: download `track_*_android.apk`, open it, and allow installing from that app when asked.
             if a newer version won't install over an older one, export a backup (settings -> export -> everything), uninstall, install the new apk, and import the backup.
 
             **web**: https://quantumkeyboard.github.io/tracckkk/ (install it as an app from the browser menu)
           releaseDraft: true
           prerelease: false
+
+  macos:
+    # waits for the windows job so there's exactly one draft release to upload into
+    needs: windows
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+      - uses: swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: npm ci
+
+      # one universal .dmg that runs natively on apple silicon and intel macs.
+      # there's no apple developer id, so the app is ad-hoc signed ("-"): apple
+      # silicon refuses to launch a completely unsigned app, and ad-hoc signing
+      # is enough for it to run once the user allows it in gatekeeper.
+      - name: build dmg
+        run: >
+          npx tauri build --target universal-apple-darwin --bundles dmg
+          --config '{"bundle":{"macOS":{"signingIdentity":"-","minimumSystemVersion":"10.15"}}}'
+
+      - name: rename dmg
+        run: |
+          dmg=$(find src-tauri/target/universal-apple-darwin/release/bundle/dmg -name '*.dmg' | head -1)
+          version=$(node -p "require('./package.json').version")
+          cp "$dmg" "track_${version}_macos_universal.dmg"
+
+      - name: attach dmg to the draft release
+        if: startsWith(github.ref, 'refs/tags/')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "$GITHUB_REF_NAME" track_*_macos_universal.dmg --clobber
+
+      - name: keep the dmg as a build artifact too
+        uses: actions/upload-artifact@v7
+        with:
+          name: macos-dmg
+          path: track_*_macos_universal.dmg
 
   android:
     # waits for the windows job so there's exactly one draft release to upload into

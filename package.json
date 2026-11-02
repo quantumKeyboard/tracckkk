@@ -1,6 +1,6 @@
 {
   "name": "track",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "a minimal, local-first dashboard: habits, board, notes, calendar and plugins on a movable canvas.",
   "private": true,
   "license": "MIT",
